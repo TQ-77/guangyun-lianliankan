@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>《广韵》韵系连连看 · 中古音小游戏</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23a63d26'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23f4ead9' font-family='serif'%3E韵%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&display=swap">
+<style>
+:root{
+  --paper:#f4ead6;
+  --paper2:#ecdcbf;
+  --paper3:#e2cda6;
+  --ink:#3a322a;
+  --ink2:#6b5c4a;
+  --line:#a08a64;
+  --zhu:#a63d26;
+  --zhu2:#c05738;
+  --gold:#a8842e;
+  --tone-平:#3f6d52;
+  --tone-上:#a9713f;
+  --tone-去:#3f6f9a;
+  --tone-入:#a63d26;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:"Noto Serif SC","Songti SC","SimSun",serif;
+  background:
+    radial-gradient(1200px 500px at 50% -100px, rgba(168,132,46,.12), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(58,50,42,.022) 0 2px, transparent 2px 30px),
+    var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer}
+.wrap{max-width:1180px;margin:0 auto;padding:14px 16px 40px}
+
+/* ===== 页眉 ===== */
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.seal{
+  font-family:"隶书","LiSu","STLiti","华文隶书","Noto Serif SC",serif;
+  width:52px;height:52px;flex:none;border-radius:9px;background:var(--zhu);
+  display:flex;align-items:center;justify-content:center;color:var(--paper);
+  font-size:30px;font-weight:900;transform:rotate(-3deg);
+  box-shadow:0 3px 8px rgba(58,50,42,.25);
+}
+.h-title{flex:1;min-width:220px}
+.h-title h1{font-size:26px;font-weight:900;letter-spacing:2px}
+.h-title p{font-size:13px;color:var(--ink2);margin-top:3px;letter-spacing:1px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{
+  background:var(--paper2);border:1px solid var(--line);border-radius:8px;
+  padding:6px 12px;text-align:center;min-width:72px;
+}
+.stat b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--ink2)}
+
+/* ===== 控制栏 ===== */
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+  border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;
+  transition:transform .1s, background .15s;
+}
+.btn:hover{background:#4a4136;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--paper2)}
+.btn svg{width:15px;height:15px;flex:none}
+.mode-switch{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mode-switch button{
+  background:transparent;border:0;padding:7px 12px;font-size:13px;font-weight:600;color:var(--ink2);
+}
+.mode-switch button.on{background:var(--zhu);color:var(--paper)}
+.controls .spacer{flex:1}
+
+/* ===== 棋盘 ===== */
+.board-card{
+  background:var(--paper2);border:2px solid var(--ink);border-radius:12px;
+  padding:12px;position:relative;
+  box-shadow:0 2px 0 var(--paper3), 0 12px 28px rgba(58,50,42,.14);
+}
+.board-card::before{
+  content:"";position:absolute;inset:5px;border:1px solid var(--line);border-radius:8px;pointer-events:none;
+}
+.board-wrap{overflow-x:auto;padding:2px}
+.board{
+  position:relative;display:grid;
+  grid-template-columns:repeat(18,1fr);
+  gap:5px;margin:0 auto;
+}
+.tile{
+  position:relative;aspect-ratio:1/1.12;
+  display:flex;align-items:center;justify-content:center;gap:2px;
+  background:hsl(var(--h) 46% 88%);
+  border:1px solid hsl(var(--h) 40% 58%);
+  border-radius:6px;
+  cursor:pointer;user-select:none;
+  transition:transform .12s ease, box-shadow .12s ease, opacity .35s ease;
+}
+.tile:hover{transform:translateY(-2px);box-shadow:0 3px 6px rgba(58,50,42,.18)}
+.tile .ch{font-size:var(--ch-fs, clamp(12px,1.55vw,19px));font-weight:700;line-height:1.05;color:hsl(var(--h) 42% 24%)}
+.tile .tone{
+  font-size:var(--tone-fs, 8.5px);font-weight:700;line-height:1;
+  padding:2px 3px;border-radius:4px;color:#fff;align-self:flex-start;
+}
+.tile[data-tone="平"] .tone{background:var(--tone-平)}
+.tile[data-tone="上"] .tone{background:var(--tone-上)}
+.tile[data-tone="去"] .tone{background:var(--tone-去)}
+.tile[data-tone="入"] .tone{background:var(--tone-入)}
+.tile.sel{
+  box-shadow:0 0 0 3px var(--zhu), 0 4px 10px rgba(166,61,38,.35);
+  transform:translateY(-2px);z-index:3;
+}
+.tile.gone{opacity:0;transform:scale(.3);pointer-events:none}
+.tile.hint{box-shadow:0 0 0 3px var(--zhu2);animation:hintPulse 1s ease-in-out infinite}
+.tile.ring{box-shadow:0 0 0 3px var(--gold);z-index:2}
+.tile.shake{animation:shake .35s ease}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 3px var(--zhu2)}50%{box-shadow:0 0 0 6px rgba(192,87,56,.5)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+#linkline{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:visible}
+#linkline polyline{fill:none;stroke:var(--zhu);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4;animation:dashmove .4s linear}
+#linkline circle{fill:var(--zhu)}
+@keyframes dashmove{to{stroke-dashoffset:-20}}
+
+/* ===== 图例 ===== */
+.legend{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.legend .cap{font-size:12px;color:var(--ink2);margin-right:4px}
+.legend .chip{
+  display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
+  padding:4px 9px;border-radius:999px;cursor:pointer;
+  background:hsl(var(--h) 46% 86%);border:1px solid hsl(var(--h) 40% 58%);color:hsl(var(--h) 40% 22%);
+  transition:transform .1s;
+}
+.legend .chip:hover{transform:translateY(-1px);box-shadow:0 2px 5px rgba(58,50,42,.2)}
+.legend .chip .dot{width:8px;height:8px;border-radius:50%;background:hsl(var(--h) 42% 40%)}
+.source{margin-top:8px;font-size:11px;color:var(--ink2);line-height:1.6}
+
+/* ===== 当前关卡 ===== */
+.cur-level{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:10px;padding:0 2px}
+.lv-name{font-size:17px;font-weight:900;letter-spacing:1px}
+.lv-sub{font-size:12px;color:var(--ink2)}
+
+/* ===== 关卡选择 ===== */
+.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-top:8px}
+.lv-card{
+  display:flex;flex-direction:column;gap:4px;text-align:left;
+  background:var(--paper2);border:1px solid var(--line);border-radius:10px;
+  padding:12px;font-family:inherit;color:var(--ink);cursor:pointer;
+  transition:transform .12s, box-shadow .12s;
+}
+.lv-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(58,50,42,.18)}
+.lv-card.done{border-color:var(--tone-平);background:hsl(150 30% 90%)}
+.lv-card .lv-no{font-size:11px;color:var(--ink2)}
+.lv-card .lv-name2{font-size:15px;font-weight:700}
+.lv-card .lv-meta{font-size:12px;color:var(--ink2)}
+.lv-card .lv-best{font-size:12px;font-weight:600;color:var(--tone-去)}
+
+/* ===== 学习板块 ===== */
+.study-tabs{display:flex;gap:8px;margin:12px 0}
+.study-tabs button{
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 14px;color:var(--ink2);
+}
+.study-tabs button.on{background:var(--zhu);border-color:var(--zhu);color:var(--paper)}
+.she-table-wrap{margin-bottom:12px}
+.she-table-cap{
+  display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px;
+  padding:5px 10px;border-radius:8px 8px 0 0;
+  background:hsl(var(--h) 46% 86%);border:1px solid hsl(var(--h) 40% 58%);border-bottom:0;color:hsl(var(--h) 40% 22%);
+}
+.she-table-cap .dot{width:9px;height:9px;border-radius:50%;background:hsl(var(--h) 42% 40%)}
+.she-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.she-table th,.she-table td{border:1px solid var(--line);padding:4px 2px;text-align:center}
+.she-table th{background:var(--paper2);color:var(--ink2);font-weight:600}
+.she-table td.xi{font-weight:700;color:var(--ink)}
+.she-table td.kh{font-size:12px;color:var(--ink2);font-weight:600}
+.ref-tip{font-size:12.5px;color:var(--ink2);line-height:1.6;margin:8px 0 4px}
+.ref-list{display:flex;flex-direction:column;gap:10px}
+.ref-item{display:block;width:100%;text-align:left;font-family:inherit;background:var(--paper2);border:1px solid rgba(60,40,20,.16);border-radius:8px;padding:10px 12px;cursor:pointer;transition:border-color .15s}
+.ref-item:hover{border-color:var(--zhu)}
+.ref-go{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:var(--zhu)}
+.ref-panel{width:min(860px,92vw)}
+#refview-body{width:100%;max-height:62vh;overflow:auto;border:1px solid rgba(60,40,20,.22);border-radius:6px;background:#fff;padding:8px;box-sizing:border-box}
+#refview-body img{display:block;max-width:100%;height:auto;margin:0 auto 8px;border-radius:3px}
+.ref-link-row{display:flex;gap:8px;margin-top:10px;align-items:center}
+#refview-link{flex:1;min-width:0;font-size:12px;padding:7px 9px;border:1px solid rgba(60,40,20,.22);border-radius:6px;background:var(--paper);color:var(--ink2);font-family:inherit}
+.ref-t{display:block;font-weight:700;color:var(--ink);font-size:14px}
+.ref-a{display:block;color:var(--zhu);font-size:12px;margin-top:2px}
+.ref-d{display:block;color:var(--ink2);font-size:12.5px;line-height:1.55;margin-top:4px}
+.she-table td.miss{color:#b3a68f}
+.she-table .tone-c{display:inline-block;min-width:20px;padding:1px 5px;border-radius:5px;color:#fff;font-weight:700;line-height:1.5}
+.she-table .tone-p{background:var(--tone-平)}
+.she-table .tone-s{background:var(--tone-上)}
+.she-table .tone-q{background:var(--tone-去)}
+.she-table .tone-r{background:var(--tone-入)}
+.learn-note{font-size:13.5px;line-height:1.85;color:var(--ink)}
+.learn-note h3{font-size:14.5px;margin:14px 0 4px;color:var(--zhu)}
+.learn-note p{margin-bottom:4px}
+.xi-row.off{opacity:.45;cursor:default}
+.xi-row.off:hover{background:transparent}
+.xi-row .off-tag{margin-left:auto;font-size:11px;color:var(--ink2)}
+
+/* ===== 弹层 ===== */
+.mask{
+  position:fixed;inset:0;background:rgba(38,32,26,.55);z-index:40;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.mask.open{display:flex}
+.panel{
+  background:var(--paper);border:2px solid var(--ink);border-radius:14px;
+  max-width:720px;width:100%;max-height:82vh;overflow:auto;
+  padding:22px 24px;position:relative;box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.panel h2{font-size:20px;margin-bottom:4px;letter-spacing:1px}
+.panel .sub{font-size:12px;color:var(--ink2);margin-bottom:14px}
+.panel .close{
+  position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--line);background:var(--paper2);color:var(--ink);
+  font-size:15px;line-height:1;
+}
+.panel .close:hover{background:var(--zhu);color:var(--paper);border-color:var(--zhu)}
+.she-group{margin-bottom:14px}
+.she-head{
+  display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;
+  padding:6px 10px;border-radius:8px;margin-bottom:6px;
+  background:hsl(var(--h) 46% 86%);border:1px solid hsl(var(--h) 40% 58%);color:hsl(var(--h) 40% 22%);
+}
+.she-head .dot{width:10px;height:10px;border-radius:50%;background:hsl(var(--h) 42% 40%)}
+.she-head .cnt{margin-left:auto;font-size:11px;font-weight:400;color:var(--ink2)}
+.xi-row{
+  display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;
+  font-size:14px;
+}
+.xi-row:hover{background:var(--paper2)}
+.xi-row .name{font-weight:700;min-width:52px}
+.xi-row .members{color:var(--ink2);letter-spacing:1px}
+.xi-row .done{margin-left:auto;color:var(--tone-平);font-size:12px;font-weight:700}
+
+/* ===== 规则 ===== */
+.rule-text{font-size:14px;line-height:1.85;color:var(--ink)}
+.rule-text h3{font-size:15px;margin:12px 0 4px}
+.rule-text .tone-demo{display:inline-block;padding:1px 6px;border-radius:4px;color:#fff;font-size:12px;margin-right:4px}
+.rule-text ul{padding-left:20px}
+
+/* ===== 通关 ===== */
+.win-box{text-align:center;padding:10px 0}
+.win-seal{
+  width:78px;height:78px;margin:0 auto 14px;border-radius:14px;background:var(--zhu);
+  color:var(--paper);font-size:44px;font-weight:900;display:flex;align-items:center;justify-content:center;
+  transform:rotate(-4deg);box-shadow:0 6px 18px rgba(166,61,38,.4);
+  animation:sealin .5s ease;
+}
+@keyframes sealin{0%{transform:rotate(-4deg) scale(.4);opacity:0}100%{transform:rotate(-4deg) scale(1);opacity:1}}
+.win-box h2{font-size:24px;letter-spacing:3px}
+.win-box p{color:var(--ink2);font-size:13px;margin:6px 0 16px}
+.win-stats{display:flex;justify-content:center;gap:26px;margin-bottom:20px}
+.win-stats .ws{text-align:center}
+.win-stats b{font-size:22px;font-variant-numeric:tabular-nums}
+.win-stats span{font-size:12px;color:var(--ink2);display:block}
+.win-btns{display:flex;gap:10px;justify-content:center}
+
+/* ===== 提示条 ===== */
+#toasts{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{
+  background:var(--ink);color:var(--paper);border-radius:8px;padding:8px 16px;
+  font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.3);max-width:92vw;
+  animation:toastin .25s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.toast.out{opacity:0;transition:opacity .4s}
+@keyframes toastin{0%{transform:translateY(-10px);opacity:0}100%{transform:translateY(0);opacity:1}}
+.toast .zhu{color:#e0a08a;font-weight:700}
+
+/* ===== 数据自检 ===== */
+#selftest{font-size:11px;color:var(--ink2);margin-top:6px;text-align:right}
+#selftest.bad{color:var(--zhu);font-weight:700;text-align:left;background:rgba(166,61,38,.08);border:1px solid var(--zhu);border-radius:6px;padding:6px 10px}
+
+/* ===== 反馈评论弹层 ===== */
+.fb-row{display:flex;gap:8px;margin-top:14px}
+.fb-row input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12.5px;color:var(--ink);background:var(--paper);font-family:inherit}
+.fb-row input:focus{outline:none;border-color:var(--zhu)}
+.fb-tip{font-size:12px;color:var(--ink2);line-height:1.75;margin:12px 0 4px}
+#fb-open{width:100%}
+
+/* ===== 主菜单（第一层 / 进入界面） ===== */
+#view-menu{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:44px 20px;text-align:center}
+body.in-menu #view-menu{display:flex}
+body.in-menu #view-game{display:none}
+.menu-seal{width:88px;height:88px;border-radius:18px;background:var(--zhu);color:var(--paper);font-size:64px;font-weight:900;font-family:"隶书","LiSu","STLiti","华文隶书","Noto Serif SC",serif;display:flex;align-items:center;justify-content:center;transform:rotate(-4deg);box-shadow:0 10px 26px rgba(166,61,38,.4);margin:0 auto 18px}
+.menu-title h1{font-size:42px;letter-spacing:6px;color:var(--ink);margin:0}
+.menu-title p{margin:10px 0 0;color:var(--ink2);font-size:14px;letter-spacing:2px}
+.menu-entries{display:flex;flex-direction:column;gap:16px;width:min(340px,88vw);margin:38px auto 0}
+.menu-entry{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;padding:20px 18px;border-radius:14px;border:2px solid var(--line);background:var(--paper2);cursor:pointer;font-family:inherit;text-decoration:none;transition:border-color .15s,transform .1s,background .15s}
+.menu-entry:hover{border-color:var(--zhu);transform:translateY(-2px)}
+.menu-entry b{font-size:22px;letter-spacing:3px;color:var(--ink)}
+.menu-entry span{font-size:13px;color:var(--ink2)}
+.menu-entry.play{background:var(--zhu);border-color:var(--zhu);color:var(--paper)}
+.menu-entry.play b,.menu-entry.play span{color:var(--paper)}
+.menu-entry.play:hover{background:var(--zhu2);border-color:var(--zhu2)}
+.menu-foot{margin-top:54px;max-width:560px}
+.menu-note{margin-top:16px;font-size:12.5px;color:var(--ink2);line-height:1.7;max-width:560px;text-align:center}
+@media (max-width:760px){
+  .menu-title h1{font-size:30px;letter-spacing:4px}
+  .menu-seal{width:72px;height:72px;font-size:52px;border-radius:15px}
+  .menu-entry b{font-size:19px}
+  .menu-foot{font-size:10.5px}
+  .menu-note{font-size:11px}
+}
+
+@media (max-width:760px){
+  .wrap{padding:10px 10px 30px}
+  .h-title h1{font-size:21px}
+  .stat{min-width:60px;padding:5px 8px}
+  .stat b{font-size:15px}
+  .btn{padding:9px 12px}
+  .mode-switch button{padding:9px 12px}
+  .legend .chip{padding:6px 10px}
+  .board{gap:4px}
+  .board-card{padding:8px}
+  .tile{gap:1px}
+  .tile .tone{font-size:7.5px;padding:1px 2px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body class="in-menu">
+<!-- ===== 视图一：主菜单（进入界面） ===== -->
+<div id="view-menu">
+  <div class="menu-seal">韵</div>
+  <div class="menu-title">
+    <h1>韵系连连看</h1>
+    <p>《广韵》二百零六韵 · 六十一韵系 · 十六摄 · 同系互消</p>
+  </div>
+  <div class="menu-entries">
+    <button class="menu-entry play" id="btn-play">
+      <b>开始游戏</b>
+      <span>十一关 · 由易到难 · 本关韵系随机抽取 · 通关自选晋级</span>
+    </button>
+    <button class="menu-entry" id="btn-rules-menu">
+      <b>规则说明</b>
+      <span>玩法与模式说明 · 同系互消 · 经典路径与自由模式</span>
+    </button>
+    <button class="menu-entry" id="btn-study-menu">
+      <b>知识学习</b>
+      <span>四声相承表 · 韵目常识 · 记诵参考资料</span>
+    </button>
+    <a class="menu-entry" id="btn-feedback" href="https://mp.weixin.qq.com/s/ALcb3Sl7jPsviGQMJcG7tA" target="_blank" rel="noopener">
+      <b>反馈评论</b>
+      <span>使用疑问 · 材料建议 · 问题留言，进入公众号反馈贴</span>
+    </a>
+  </div>
+  <p class="menu-foot source">
+    数据依泽存堂本《广韵》韵目（平声五十七、上声五十五、去声六十、入声三十四，共二百零六韵），韵系系联从王力《汉语音韵学》六十一韵系；个别韵目字取通行字形（如掭、酽、鉴），殷系学界亦作「欣系」。开合口与等第按通行《广韵》音系归类（参《方言调查字表》/王力《汉语音韵学》）。
+  </p>
+</div>
+
+<!-- ===== 视图二：连连看游戏 ===== -->
+<div class="wrap" id="view-game">
+
+  <header>
+    <div class="seal">韵</div>
+    <div class="h-title">
+      <h1>韵系连连看</h1>
+      <p>《广韵》二百零六韵 · 六十一韵系 · 十六摄 · 同系互消</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="st-time">00:00</b><span>用时</span></div>
+      <div class="stat"><b id="st-pairs">0</b><span>消去对数</span></div>
+      <div class="stat"><b id="st-left">234</b><span>剩余韵字</span></div>
+      <div class="stat"><b id="st-master">0</b><span>韵系掌握</span></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button class="btn ghost" id="btn-menu" aria-label="返回主菜单">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+      菜单
+    </button>
+    <button class="btn" id="btn-levels" aria-label="选择关卡与难度">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM4 14h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg>
+      关卡
+    </button>
+    <button class="btn" id="btn-new" aria-label="重开本关（重新随机韵系）">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      重开
+    </button>
+    <button class="btn ghost" id="btn-shuffle" aria-label="重排剩余韵字">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      重排
+    </button>
+    <button class="btn ghost" id="btn-hint" aria-label="提示一对可消韵字">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.5 1 2.5h6c0-1 .3-1.9 1-2.5A6 6 0 0 0 12 3z"/></svg>
+      提示
+    </button>
+    <div class="mode-switch" id="mode-switch" aria-label="游戏模式">
+      <button data-mode="classic" class="on">经典 · 路径</button>
+      <button data-mode="free">自由 · 同系即消</button>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="btn-mute" aria-label="音效开关">
+      <svg id="ico-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>
+      音效
+    </button>
+    <button class="btn ghost" id="btn-study" aria-label="打开知识学习板块">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+      学习
+    </button>
+    <button class="btn ghost" id="btn-atlas" aria-label="打开韵系图鉴">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+      图鉴
+    </button>
+    <button class="btn ghost" id="btn-rules" aria-label="查看玩法规则">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      规则
+    </button>
+  </div>
+
+  <div class="cur-level">
+    <span class="lv-name" id="lv-name">第 1 关 · 启蒙</span>
+    <span class="lv-sub" id="lv-sub">4 个韵系 · 随机抽取 · 自然晋级</span>
+  </div>
+
+  <div class="board-card">
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <svg id="linkline"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="cap">十六摄（点按高亮盘面同摄韵字）：</span>
+    <div id="legend-chips"></div>
+  </div>
+  <p class="menu-note">如您对程序使用或材料内容有任何疑问、问题或建议，欢迎通过【反馈评论】进入公众号反馈贴留言。——T-77</p>
+
+</div>
+
+<!-- ===== 弹层：图鉴 ===== -->
+<div class="mask" id="mask-atlas">
+  <div class="panel">
+    <button class="close" data-close="mask-atlas" aria-label="关闭">×</button>
+    <h2>六十一韵系图鉴</h2>
+    <p class="sub">按十六摄分组 · 点击某系可高亮盘面同系韵字 · 标 ✓ 为已全部消去 · 未入本关者置灰</p>
+    <div id="atlas-body"></div>
+  </div>
+</div>
+
+<!-- ===== 弹层：关卡选择 ===== -->
+<div class="mask" id="mask-levels">
+  <div class="panel">
+    <button class="close" data-close="mask-levels" aria-label="关闭">×</button>
+    <h2>选择关卡 · 自选难度</h2>
+    <p class="sub">韵系由少到多逐关递增 · 本关韵系随机抽取 · 通关记入最佳用时</p>
+    <div class="lv-grid" id="lv-grid"></div>
+  </div>
+</div>
+
+<!-- ===== 弹层：知识学习 ===== -->
+<div class="mask" id="mask-study">
+  <div class="panel">
+    <button class="close" data-close="mask-study" aria-label="关闭">×</button>
+    <h2>知识学习 · 四声相承</h2>
+    <p class="sub">《广韵》二百零六韵 · 六十一韵系 · 十六摄 · 附记诵参考资料</p>
+    <div class="study-tabs">
+      <button class="on" data-tab="shetable">四声相承表</button>
+      <button data-tab="notes">韵目常识</button>
+      <button data-tab="files">学习资料</button>
+    </div>
+    <div id="study-body"></div>
+  </div>
+</div>
+
+<!-- ===== 弹层：资料预览 ===== -->
+<div class="mask" id="mask-refview">
+  <div class="panel ref-panel">
+    <button class="close" data-close="mask-refview" aria-label="关闭">×</button>
+    <h2 id="refview-title">资料预览</h2>
+    <p class="sub">资料页预览（图片版） · 如未显示请复制下方链接到浏览器打开或下载</p>
+    <div id="refview-body"></div>
+    <div class="ref-link-row">
+      <input id="refview-link" type="text" readonly aria-label="资料下载链接">
+      <button class="btn ghost" id="btn-ref-open">新窗口打开</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹层：反馈评论 ===== -->
+<div class="mask" id="mask-feedback">
+  <div class="panel">
+    <button class="close" data-close="mask-feedback" aria-label="关闭">×</button>
+    <h2>反馈评论</h2>
+    <p class="sub">网页环境屏蔽了外部链接跳转，请按下面任一方式进入公众号反馈贴留言</p>
+    <div class="fb-row">
+      <input id="fb-link" type="text" readonly value="https://mp.weixin.qq.com/s/ALcb3Sl7jPsviGQMJcG7tA" aria-label="反馈贴链接">
+      <button class="btn" id="fb-copy">复制链接</button>
+    </div>
+    <p class="fb-tip">① 复制链接后，粘贴到微信或手机浏览器打开即可留言；② 在微信内打开本游戏时，可直接点击下方按钮跳转。</p>
+    <button class="btn ghost" id="fb-open">尝试直接打开</button>
+  </div>
+</div>
+
+<!-- ===== 弹层：规则 ===== -->
+<div class="mask" id="mask-rules">
+  <div class="panel">
+    <button class="close" data-close="mask-rules" aria-label="关闭">×</button>
+    <h2>玩法与规则</h2>
+    <div class="rule-text">
+      <h3>关卡与晋级</h3>
+      <ul>
+        <li>共十一关：第 1 关只取 <strong>4 个韵系</strong>，之后逐关递增，至第 11 关通览全部六十一韵系（二百三十四枚韵字）。</li>
+        <li>每关的韵系组合<strong>随机抽取</strong>；通关后点「下一关」自然晋级，亦可随时在「关卡」面板自选难度（韵系数越多越难）。</li>
+      </ul>
+      <h3>基本玩法</h3>
+      <ul>
+        <li>点击任意两枚<span class="tone-demo" style="background:var(--tone-平)">韵字牌</span>，若它们<strong>同属一个韵系</strong>，即互相消去。如「东」与「董」，同属东系（东 · 董 · 送 · 屋）。</li>
+        <li>所谓韵系，即《广韵》二百零六韵按平上去入四声相配系联而成的六十一组（如支系：支 · 纸 · 寘）。同一韵系的韵可以互相消掉，不分声调、不论字面异同。</li>
+        <li>四声以角标标示：<span class="tone-demo" style="background:var(--tone-平)">平</span><span class="tone-demo" style="background:var(--tone-上)">上</span><span class="tone-demo" style="background:var(--tone-去)">去</span><span class="tone-demo" style="background:var(--tone-入)">入</span>；牌面底色对应十六摄。</li>
+      </ul>
+      <h3>两种模式</h3>
+      <ul>
+        <li><strong>经典 · 路径</strong>：两牌之间须有一条拐弯不超过两次的连线（可绕行盘面四周之外）方能消去；无可连通之对时自动重排。</li>
+        <li><strong>自由 · 同系即消</strong>：不设路径限制，同系即消。</li>
+      </ul>
+      <h3>关于成对</h3>
+      <p>冬系、痕系及支脂之微等韵系仅有三韵，祭、泰、夬、废四韵独居去声；为成对消去，盘面自动为每个奇数韵系补入一枚系内重牌，每关盘面恰好一一配对（通览关为二百三十四枚）。</p>
+      <h3>提示与重排</h3>
+      <ul>
+        <li><strong>提示</strong>：自动找出一对当前可消之牌并高亮。</li>
+        <li><strong>重排</strong>：将剩余韵字重新洗牌布列。</li>
+        <li>一个韵系的全部韵字消尽时，计入「韵系掌握」，图鉴中标 ✓。</li>
+      </ul>
+      <h3>数据说明</h3>
+      <p>韵目与韵系归属以泽存堂本《广韵》及王力《汉语音韵学》为准；「殷系」即后世避讳所改的「欣系」。本页为单机小游戏，不联网、不上传任何数据。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 弹层：通关 ===== -->
+<div class="mask" id="mask-win">
+  <div class="panel" style="max-width:460px">
+    <div class="win-box">
+      <div class="win-seal">通</div>
+      <h2 id="win-h2">本关通关</h2>
+      <p id="win-sub">同系互消，韵系渐明</p>
+      <div class="win-stats">
+        <div class="ws"><b id="win-time">00:00</b><span>用时</span></div>
+        <div class="ws"><b id="win-pairs">0</b><span>消去对数</span></div>
+        <div class="ws"><b id="win-best">--</b><span>最佳纪录</span></div>
+      </div>
+      <div class="win-btns">
+        <button class="btn" id="btn-next" style="display:none">下一关</button>
+        <button class="btn" id="btn-again">重玩本关</button>
+        <button class="btn ghost" id="btn-win-atlas">查看图鉴</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   数据：十六摄色相 & 六十一韵系（依泽存堂本《广韵》韵目 / 王力61韵系）
+   每条：[韵系名, 摄, [[韵字, 声调, 广韵目次], ...]]
+   ============================================================ */
+const SHE_HUE = {通:20,江:208,止:48,遇:330,蟹:175,臻:265,山:195,效:8,果:75,假:145,宕:300,梗:225,曾:40,流:185,深:155,咸:345};
+const SHE_ORDER = ["通","江","止","遇","蟹","臻","山","效","果","假","宕","梗","曾","流","深","咸"];
+
+const XI_LIST = [
+  ["东","通",[["东","平","上平一东"],["董","上","上声一董"],["送","去","去声一送"],["屋","入","入声一屋"]], "合一·合三"],
+  ["冬","通",[["冬","平","上平二冬"],["宋","去","去声二宋"],["沃","入","入声二沃"]], "合一"],
+  ["钟","通",[["钟","平","上平三钟"],["肿","上","上声二肿"],["用","去","去声三用"],["烛","入","入声三烛"]], "合三"],
+  ["江","江",[["江","平","上平四江"],["讲","上","上声三讲"],["绛","去","去声四绛"],["觉","入","入声四觉"]], "开二"],
+  ["支","止",[["支","平","上平五支"],["纸","上","上声四纸"],["寘","去","去声五寘"]], "开三·合三"],
+  ["脂","止",[["脂","平","上平六脂"],["旨","上","上声五旨"],["至","去","去声六至"]], "开三·合三"],
+  ["之","止",[["之","平","上平七之"],["止","上","上声六止"],["志","去","去声七志"]], "开三"],
+  ["微","止",[["微","平","上平八微"],["尾","上","上声七尾"],["未","去","去声八未"]], "开三·合三"],
+  ["鱼","遇",[["鱼","平","上平九鱼"],["语","上","上声八语"],["御","去","去声九御"]], "合三"],
+  ["虞","遇",[["虞","平","上平十虞"],["麌","上","上声九麌"],["遇","去","去声十遇"]], "合三"],
+  ["模","遇",[["模","平","上平十一模"],["姥","上","上声十姥"],["暮","去","去声十一暮"]], "合一"],
+  ["齐","蟹",[["齐","平","上平十二齐"],["荠","上","上声十一荠"],["霁","去","去声十二霁"]], "开四·合四"],
+  ["祭","蟹",[["祭","去","去声十三祭"]], "开三·合三"],
+  ["泰","蟹",[["泰","去","去声十四泰"]], "开一·合一"],
+  ["佳","蟹",[["佳","平","上平十三佳"],["蟹","上","上声十二蟹"],["卦","去","去声十五卦"]], "开二·合二"],
+  ["皆","蟹",[["皆","平","上平十四皆"],["骇","上","上声十三骇"],["怪","去","去声十六怪"]], "开二·合二"],
+  ["夬","蟹",[["夬","去","去声十七夬"]], "开二·合二"],
+  ["灰","蟹",[["灰","平","上平十五灰"],["贿","上","上声十四贿"],["队","去","去声十八队"]], "合一"],
+  ["咍","蟹",[["咍","平","上平十六咍"],["海","上","上声十五海"],["代","去","去声十九代"]], "开一"],
+  ["废","蟹",[["废","去","去声二十废"]], "合三"],
+  ["真","臻",[["真","平","上平十七真"],["轸","上","上声十六轸"],["震","去","去声二十一震"],["质","入","入声五质"]], "开三·合三"],
+  ["谆","臻",[["谆","平","上平十八谆"],["准","上","上声十七准"],["稕","去","去声二十二稕"],["术","入","入声六术"]], "合三"],
+  ["臻","臻",[["臻","平","上平十九臻"],["栉","入","入声七栉"]], "开三"],
+  ["文","臻",[["文","平","上平二十文"],["吻","上","上声十八吻"],["问","去","去声二十三问"],["物","入","入声八物"]], "合三"],
+  ["殷","臻",[["殷","平","上平二十一殷"],["隐","上","上声十九隐"],["焮","去","去声二十四焮"],["迄","入","入声九迄"]], "开三"],
+  ["元","臻",[["元","平","上平二十二元"],["阮","上","上声二十阮"],["愿","去","去声二十五愿"],["月","入","入声十月"]], "开三·合三"],
+  ["魂","臻",[["魂","平","上平二十三魂"],["混","上","上声二十一混"],["慁","去","去声二十六慁"],["没","入","入声十一没"]], "合一"],
+  ["痕","臻",[["痕","平","上平二十四痕"],["很","上","上声二十二很"],["恨","去","去声二十七恨"]], "开一"],
+  ["寒","山",[["寒","平","上平二十五寒"],["旱","上","上声二十三旱"],["翰","去","去声二十八翰"],["曷","入","入声十二曷"]], "开一"],
+  ["桓","山",[["桓","平","上平二十六桓"],["缓","上","上声二十四缓"],["换","去","去声二十九换"],["末","入","入声十三末"]], "合一"],
+  ["删","山",[["删","平","上平二十七删"],["潸","上","上声二十五潸"],["谏","去","去声三十谏"],["黠","入","入声十四黠"]], "开二·合二"],
+  ["山","山",[["山","平","上平二十八山"],["产","上","上声二十六产"],["襉","去","去声三十一襉"],["辖","入","入声十五辖"]], "开二·合二"],
+  ["先","山",[["先","平","下平一先"],["铣","上","上声二十七铣"],["霰","去","去声三十二霰"],["屑","入","入声十六屑"]], "开四·合四"],
+  ["仙","山",[["仙","平","下平二仙"],["狝","上","上声二十八狝"],["线","去","去声三十三线"],["薛","入","入声十七薛"]], "开三·合三"],
+  ["萧","效",[["萧","平","下平三萧"],["篠","上","上声二十九篠"],["啸","去","去声三十四啸"]], "开四"],
+  ["宵","效",[["宵","平","下平四宵"],["小","上","上声三十小"],["笑","去","去声三十五笑"]], "开三"],
+  ["肴","效",[["肴","平","下平五肴"],["巧","上","上声三十一巧"],["效","去","去声三十六效"]], "开二"],
+  ["豪","效",[["豪","平","下平六豪"],["皓","上","上声三十二皓"],["号","去","去声三十七号"]], "开一"],
+  ["歌","果",[["歌","平","下平七歌"],["哿","上","上声三十三哿"],["箇","去","去声三十八箇"]], "开一"],
+  ["戈","果",[["戈","平","下平八戈"],["果","上","上声三十四果"],["过","去","去声三十九过"]], "开三·合一"],
+  ["麻","假",[["麻","平","下平九麻"],["马","上","上声三十五马"],["祃","去","去声四十祃"]], "开二·开三"],
+  ["阳","宕",[["阳","平","下平十阳"],["养","上","上声三十六养"],["漾","去","去声四十一漾"],["药","入","入声十八药"]], "开三·合三"],
+  ["唐","宕",[["唐","平","下平十一唐"],["荡","上","上声三十七荡"],["宕","去","去声四十二宕"],["铎","入","入声十九铎"]], "开一·合一"],
+  ["庚","梗",[["庚","平","下平十二庚"],["梗","上","上声三十八梗"],["映","去","去声四十三映"],["陌","入","入声二十陌"]], "开二·合二·开三"],
+  ["耕","梗",[["耕","平","下平十三耕"],["耿","上","上声三十九耿"],["诤","去","去声四十四诤"],["麦","入","入声二十一麦"]], "开二·合二"],
+  ["清","梗",[["清","平","下平十四清"],["静","上","上声四十静"],["劲","去","去声四十五劲"],["昔","入","入声二十二昔"]], "开三·合三"],
+  ["青","梗",[["青","平","下平十五青"],["迥","上","上声四十一迥"],["径","去","去声四十六径"],["锡","入","入声二十三锡"]], "开四·合四"],
+  ["蒸","曾",[["蒸","平","下平十六蒸"],["拯","上","上声四十二拯"],["证","去","去声四十七证"],["职","入","入声二十四职"]], "开三"],
+  ["登","曾",[["登","平","下平十七登"],["等","上","上声四十三等"],["嶝","去","去声四十八嶝"],["德","入","入声二十五德"]], "开一·合一"],
+  ["尤","流",[["尤","平","下平十八尤"],["有","上","上声四十四有"],["宥","去","去声四十九宥"]], "开三"],
+  ["侯","流",[["侯","平","下平十九侯"],["厚","上","上声四十五厚"],["候","去","去声五十候"]], "开一"],
+  ["幽","流",[["幽","平","下平二十幽"],["黝","上","上声四十六黝"],["幼","去","去声五十一幼"]], "开三"],
+  ["侵","深",[["侵","平","下平二十一侵"],["寝","上","上声四十七寝"],["沁","去","去声五十二沁"],["缉","入","入声二十六缉"]], "开三"],
+  ["覃","咸",[["覃","平","下平二十二覃"],["感","上","上声四十八感"],["勘","去","去声五十三勘"],["合","入","入声二十七合"]], "开一"],
+  ["谈","咸",[["谈","平","下平二十三谈"],["敢","上","上声四十九敢"],["阚","去","去声五十四阚"],["盍","入","入声二十八盍"]], "开一"],
+  ["盐","咸",[["盐","平","下平二十四盐"],["琰","上","上声五十琰"],["艳","去","去声五十五艳"],["叶","入","入声二十九叶"]], "开三"],
+  ["添","咸",[["添","平","下平二十五添"],["忝","上","上声五十一忝"],["掭","去","去声五十六掭"],["怗","入","入声三十怗"]], "开四"],
+  ["咸","咸",[["咸","平","下平二十六咸"],["豏","上","上声五十三豏"],["陷","去","去声五十八陷"],["洽","入","入声三十一洽"]], "开二"],
+  ["衔","咸",[["衔","平","下平二十七衔"],["槛","上","上声五十四槛"],["鉴","去","去声五十九鉴"],["狎","入","入声三十二狎"]], "开二"],
+  ["严","咸",[["严","平","下平二十八严"],["俨","上","上声五十二俨"],["酽","去","去声五十七酽"],["业","入","入声三十三业"]], "开三"],
+  ["凡","咸",[["凡","平","下平二十九凡"],["范","上","上声五十五范"],["梵","去","去声六十梵"],["乏","入","入声三十四乏"]], "合三"]
+];
+
+/* 韵系信息索引：名字 -> {she, members:[{ch,tone,num}], done} */
+const XI_INDEX = {};
+XI_LIST.forEach(([name, she, members]) => {
+  XI_INDEX[name] = { name, she, hue: SHE_HUE[she],
+    members: members.map(([ch, tone, num]) => ({ ch, tone, num })), done: false };
+});
+
+/* 本关韵系：从 61 韵系中随机抽取（通览关取全部） */
+function pickXis(count){
+  const names = XI_LIST.map(x => x[0]);
+  shuffleArr(names);
+  return names.slice(0, count);
+}
+
+/* 开合口·等第：按通行《广韵》音系归类（参《方言调查字表》/ 王力《汉语音韵学》） */
+const KH_MAP = { 东:'合一·合三', 冬:'合一', 钟:'合三', 江:'开二', 支:'开三·合三', 脂:'开三·合三',
+ 之:'开三', 微:'开三·合三', 鱼:'合三', 虞:'合三', 模:'合一', 齐:'开四·合四',
+ 祭:'开三·合三', 泰:'开一·合一', 佳:'开二·合二', 皆:'开二·合二', 夬:'开二·合二',
+ 灰:'合一', 咍:'开一', 废:'合三', 真:'开三·合三', 谆:'合三', 臻:'开三', 文:'合三',
+ 殷:'开三', 元:'开三·合三', 魂:'合一', 痕:'开一', 寒:'开一', 桓:'合一', 删:'开二·合二',
+ 山:'开二·合二', 先:'开四·合四', 仙:'开三·合三', 萧:'开四', 宵:'开三', 肴:'开二',
+ 豪:'开一', 歌:'开一', 戈:'开三·合一', 麻:'开二·开三', 阳:'开三·合三', 唐:'开一·合一',
+ 庚:'开二·合二·开三', 耕:'开二·合二', 清:'开三·合三', 青:'开四·合四', 蒸:'开三',
+ 登:'开一·合一', 尤:'开三', 侯:'开一', 幽:'开三', 侵:'开三', 覃:'开一', 谈:'开一',
+ 盐:'开三', 添:'开四', 咸:'开二', 衔:'开二', 严:'开三', 凡:'合三' };
+function khOf(name){ return KH_MAP[name] || '—'; }
+
+/* 生成牌堆：本关韵系的韵目成员 + 奇数韵系补一枚重牌（保证成对） */
+function buildTilesFor(xiNames){
+  const set = new Set(xiNames);
+  const arr = [];
+  let id = 0;
+  XI_LIST.forEach(([name, she, members]) => {
+    if (!set.has(name)) return;
+    const kh = khOf(name);
+    members.forEach(([ch, tone, num]) => {
+      arr.push({ id: id++, xi: name, she, hue: SHE_HUE[she], kh, ch, tone, num, dup: false });
+    });
+    if (members.length % 2 === 1) {           // 奇数韵系补一枚系内重牌，保证成对
+      const [ch, tone, num] = members[0];
+      arr.push({ id: id++, xi: name, she, hue: SHE_HUE[she], kh, ch, tone, num, dup: true });
+    }
+  });
+  return arr;
+}
+
+/* 盘面布局：方形优先、无空位。优先取 cols×rows==n 的最接近方形网格；
+   否则补少量系内重牌（target 略大于 n，差值为 2 的倍数），列数 4–18、行数 2–24 */
+function planLayout(n){
+  let best = null;
+  for (let k = 0; k <= 8; k++){                 // 每补一对牌 +2 枚，最多补 16 枚
+    const n2 = n + k * 2;
+    for (let cols = 4; cols <= 18; cols++){
+      const rows = n2 / cols;
+      if (rows !== Math.floor(rows) || rows < 2 || rows > 24) continue;
+      const s = Math.abs(cols - rows) * 2 + k * 3; // 方形优先（权重高），其次少补牌
+      if (!best || s < best.s || (s === best.s && cols > best.cols)){
+        best = { s, cols, rows, target: n2 };
+      }
+    }
+  }
+  if (best) return best;
+  const cols = Math.min(18, Math.max(4, Math.ceil(Math.sqrt(n))));
+  return { cols, rows: Math.ceil(n / cols), target: n };
+}
+/* 方形网格补牌：成对追加系内重牌，直到填满 */
+function addFillerTiles(tiles, count){
+  let id = tiles.reduce((m, t) => Math.max(m, t.id), -1) + 1;
+  let i = 0;
+  while (count > 0){
+    const name = xiNames[i % xiNames.length];
+    const xi = XI_INDEX[name];
+    const m = xi.members[(Math.random() * xi.members.length) | 0];
+    for (let q = 0; q < 2; q++){
+      tiles.push({ id: id++, xi: name, she: xi.she, hue: SHE_HUE[xi.she], kh: khOf(name), ch: m.ch, tone: m.tone, num: m.num, dup: true });
+    }
+    count -= 2; i++;
+  }
+}
+
+/* 关卡进度：最佳用时（分:秒）与已通关列表，存 localStorage */
+function loadProg(){
+  try { return JSON.parse(localStorage.getItem('yunxi-prog')) || { best: {}, cleared: [] }; }
+  catch (e) { return { best: {}, cleared: [] }; }
+}
+function saveProg(){
+  try { localStorage.setItem('yunxi-prog', JSON.stringify(prog)); } catch (e) {}
+}
+
+/* 各摄韵目数与成牌数（供自检） */
+const SHE_MEMBER_COUNT = {通:11,江:4,止:12,遇:9,蟹:19,臻:29,山:24,效:12,果:6,假:3,宕:8,梗:16,曾:8,流:9,深:4,咸:32};
+const SHE_TILE_COUNT   = {通:12,江:4,止:16,遇:12,蟹:28,臻:30,山:24,效:16,果:8,假:4,宕:8,梗:16,曾:8,流:12,深:4,咸:32};
+/* ============================================================
+   核心逻辑：盘面 / 连通判定（拐弯≤2次）/ 洗牌 / 死局检测
+   ============================================================ */
+let COLS = 18, ROWS = 13;               // 随关卡动态调整
+const TOTAL_TILES = 234;
+const LEVELS = [
+  { count: 4,  name: '启蒙' }, { count: 6,  name: '入门' }, { count: 8,  name: '初阶' },
+  { count: 10, name: '进阶' }, { count: 12, name: '熟练' }, { count: 16, name: '精进' },
+  { count: 20, name: '高手' }, { count: 26, name: '达人' }, { count: 34, name: '大师' },
+  { count: 46, name: '宗师' }, { count: 61, name: '通览' }
+];
+let tiles = [];                         // 本关韵字牌
+let board = [];                         // ROWS x COLS -> tileId 或 null
+let tileEls = [];                       // id -> DOM 元素
+let sel = null;                         // 当前选中 tileId
+let mode = 'classic';
+let levelIdx = 0, xiNames = [];         // 当前关卡与本关韵系集合
+let pairsCount = 0, masterCount = 0;
+let timerOn = false, timerStart = null, timerInterval = null;
+let prog = loadProg();                  // {best:{}, cleared:[]}
+
+function shuffleArr(a){ for (let i = a.length - 1; i > 0; i--){ const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function isFree(r, c){ return r < 0 || r >= ROWS || c < 0 || c >= COLS || board[r][c] === null; }
+
+/* 连通判定：返回路径拐点 [[r,c],...]（含起终点），不可连则 null。
+   直线段只可穿过空格，最多拐弯两次，允许绕行盘面外沿。 */
+function canConnect(a, b){
+  if (a.r === b.r && a.c === b.c) return null;
+  const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
+  const PERP = [[2,3],[2,3],[0,1],[0,1]];                    // 与第 i 方向垂直的两向
+  const walk = (r, c, dr, dc) => {
+    const out = [];
+    let rr = r + dr, cc = c + dc;
+    for (;;){
+      if (rr === b.r && cc === b.c){ out.push([rr, cc]); break; }
+      if (rr < -1 || rr > ROWS || cc < -1 || cc > COLS) break;   // 仅允许绕行一圈外沿，防越界死循环
+      if (!isFree(rr, cc)) break;
+      out.push([rr, cc]);
+      rr += dr; cc += dc;
+    }
+    return out;
+  };
+  for (let d0 = 0; d0 < 4; d0++){
+    const s0 = walk(a.r, a.c, DIRS[d0][0], DIRS[d0][1]);
+    for (const [r1, c1] of s0){
+      if (r1 === b.r && c1 === b.c) return [[a.r, a.c], [b.r, b.c]];                       // 直线
+      for (const d1 of PERP[d0]){
+        const s1 = walk(r1, c1, DIRS[d1][0], DIRS[d1][1]);
+        for (const [r2, c2] of s1){
+          if (r2 === b.r && c2 === b.c) return [[a.r, a.c], [r1, c1], [b.r, b.c]];         // 一拐
+          for (const d2 of PERP[d1]){
+            const s2 = walk(r2, c2, DIRS[d2][0], DIRS[d2][1]);
+            for (const [r3, c3] of s2){
+              if (r3 === b.r && c3 === b.c) return [[a.r, a.c], [r1, c1], [r2, c2], [b.r, b.c]]; // 两拐
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function clearLine(){ document.getElementById('linkline').innerHTML = ''; }
+
+function drawLine(points){
+  const boardEl = document.getElementById('board');
+  const br = boardEl.getBoundingClientRect();
+  const svg = document.getElementById('linkline');
+  const NS = 'http://www.w3.org/2000/svg';
+  const coords = points.map(([r, c]) => {
+    const er = tileEls[board[r][c]].getBoundingClientRect();
+    return [er.left - br.left + er.width / 2, er.top - br.top + er.height / 2];
+  });
+  svg.setAttribute('width', br.width); svg.setAttribute('height', br.height);
+  svg.style.width = br.width + 'px'; svg.style.height = br.height + 'px';
+  const poly = document.createElementNS(NS, 'polyline');
+  poly.setAttribute('points', coords.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
+  svg.appendChild(poly);
+  coords.forEach(p => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', p[0].toFixed(1)); c.setAttribute('cy', p[1].toFixed(1)); c.setAttribute('r', 3.5);
+    svg.appendChild(c);
+  });
+}
+
+/* 是否仍有可消之对（经典模式做连通检查；自由模式恒有） */
+function hasMove(){
+  const live = tiles.filter(t => !t.gone);
+  for (let i = 0; i < live.length; i++)
+    for (let j = i + 1; j < live.length; j++){
+      const a = live[i], b = live[j];
+      if (a.xi !== b.xi) continue;
+      if (mode !== 'classic') return true;
+      const pa = { r: +tileEls[a.id].dataset.r, c: +tileEls[a.id].dataset.c };
+      const pb = { r: +tileEls[b.id].dataset.r, c: +tileEls[b.id].dataset.c };
+      if (canConnect(pa, pb)) return true;
+    }
+  return false;
+}
+
+function findHintPair(){
+  const live = tiles.filter(t => !t.gone);
+  for (let i = 0; i < live.length; i++)
+    for (let j = i + 1; j < live.length; j++){
+      const a = live[i], b = live[j];
+      if (a.xi !== b.xi) continue;
+      if (mode === 'classic'){
+        const pa = { r: +tileEls[a.id].dataset.r, c: +tileEls[a.id].dataset.c };
+        const pb = { r: +tileEls[b.id].dataset.r, c: +tileEls[b.id].dataset.c };
+        if (canConnect(pa, pb)) return [a.id, b.id];
+      } else return [a.id, b.id];
+    }
+  return null;
+}
+
+/* 重排剩余韵字；经典模式下尽量保证开局可消 */
+function shuffleBoard(ensureMove){
+  const ids = [];
+  tiles.forEach(t => { if (!t.gone) ids.push(t.id); });
+  const cells = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) cells.push([r, c]);
+  const place = () => {
+    board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+    shuffleArr(ids); shuffleArr(cells);
+    ids.forEach((id, i) => {
+      const [r, c] = cells[i];
+      board[r][c] = id;
+      const el = tileEls[id];
+      el.style.gridRow = r + 1; el.style.gridColumn = c + 1;
+      el.dataset.r = r; el.dataset.c = c;
+      el.classList.remove('sel', 'hint', 'ring', 'shake');
+    });
+  };
+  place();
+  if (ensureMove && mode === 'classic' && ids.length > 2)
+    for (let i = 0; i < 150 && !hasMove(); i++) place();
+  sel = null;
+  clearLine();
+}
+
+function updateStats(){
+  const left = tiles.filter(t => !t.gone).length;
+  document.getElementById('st-pairs').textContent = pairsCount;
+  document.getElementById('st-left').textContent = left;
+  document.getElementById('st-master').textContent = masterCount;
+  renderAtlas();
+}
+
+function doMatch(idA, idB){
+  const a = tiles[idA], b = tiles[idB];
+  a.gone = b.gone = true;
+  pairsCount++;
+  tileEls[idA].classList.add('gone');
+  tileEls[idB].classList.add('gone');
+  board[+tileEls[idA].dataset.r][+tileEls[idA].dataset.c] = null;
+  board[+tileEls[idB].dataset.r][+tileEls[idB].dataset.c] = null;
+  sel = null;
+  if (tiles.filter(t => !t.gone && t.xi === a.xi).length === 0){
+    XI_INDEX[a.xi].done = true;
+    masterCount++;
+    toast('已掌握韵系：<span class="zhu">' + a.xi + '系 · ' + a.she + '摄</span>');
+  } else {
+    const members = XI_INDEX[a.xi].members.map(m => m.ch).join(' · ');
+    toast('「' + a.ch + '(' + a.tone + ')」×「' + b.ch + '(' + b.tone + ')」同属<span class="zhu">' + a.xi + '系 · ' + a.she + '摄</span>　' + members);
+  }
+  updateStats();
+  if (tiles.every(t => t.gone)) win();
+  else if (mode === 'classic' && !hasMove()){
+    toast('无可连通的同系之对，自动重排');
+    setTimeout(() => shuffleBoard(false), 550);
+  }
+}
+
+function onTileClick(id){
+  const t = tiles[id];
+  if (t.gone) return;
+  startTimer();
+  const el = tileEls[id];
+  if (sel === id){ el.classList.remove('sel'); sel = null; return; }
+  if (sel === null){ sel = id; el.classList.add('sel'); beep(520, .06, 'sine', .05); return; }
+  const s = tiles[sel], sEl = tileEls[sel];
+  if (s.xi === t.xi){
+    const pa = { r: +sEl.dataset.r, c: +sEl.dataset.c };
+    const pb = { r: +el.dataset.r, c: +el.dataset.c };
+    const path = (mode === 'classic') ? canConnect(pa, pb) : [[pa.r, pa.c], [pb.r, pb.c]];
+    if (mode === 'free' || path){
+      if (mode === 'classic' && path) drawLine(path);
+      beep(587, .09, 'sine', .05); beep(880, .12, 'sine', .05, .08);
+      sEl.classList.remove('sel');
+      doMatch(sel, id);
+      if (mode === 'classic') setTimeout(clearLine, 520);
+    } else {
+      beep(180, .12, 'square', .04);
+      el.classList.add('shake'); sEl.classList.add('shake');
+      setTimeout(() => { el.classList.remove('shake'); sEl.classList.remove('shake'); }, 400);
+      toast('「' + s.ch + '」与「' + t.ch + '」同属' + s.xi + '系，但无法连通（经典模式拐弯≤2次）');
+      sEl.classList.remove('sel'); sel = null;
+    }
+  } else {
+    sEl.classList.remove('sel');
+    sel = id; el.classList.add('sel'); beep(520, .06, 'sine', .05);
+  }
+}
+
+/* 计时 */
+function startTimer(){
+  if (timerOn) return;
+  timerOn = true; timerStart = Date.now();
+  timerInterval = setInterval(() => {
+    document.getElementById('st-time').textContent = fmt(Date.now() - timerStart);
+  }, 500);
+}
+function fmt(ms){
+  const s = Math.floor(ms / 1000), m = Math.floor(s / 60);
+  return String(m).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function stopTimer(){ if (timerInterval){ clearInterval(timerInterval); timerInterval = null; } }
+
+/* 通关 */
+function win(){
+  stopTimer();
+  const t = fmt(Date.now() - timerStart);
+  const key = String(levelIdx);
+  let best = prog.best[key];
+  if (!best || t < best){ prog.best[key] = t; best = t; }
+  if (prog.cleared.indexOf(levelIdx) < 0) prog.cleared.push(levelIdx);
+  saveProg();
+  document.getElementById('win-time').textContent = t;
+  document.getElementById('win-pairs').textContent = pairsCount;
+  document.getElementById('win-best').textContent = best;
+  document.getElementById('win-h2').textContent = (levelIdx === LEVELS.length - 1) ? '通览《广韵》二百零六韵' : '第 ' + (levelIdx + 1) + ' 关通关';
+  document.getElementById('win-sub').textContent = (levelIdx === LEVELS.length - 1) ? '六十一韵系，了然于胸' : LEVELS[levelIdx].name + ' · 同系互消，韵系渐明';
+  document.getElementById('btn-next').style.display = (levelIdx < LEVELS.length - 1) ? '' : 'none';
+  beep(523, .15, 'sine', .06); beep(659, .15, 'sine', .06, .13);
+  beep(784, .15, 'sine', .06, .26); beep(1047, .32, 'sine', .07, .39);
+  openMask('mask-win');
+}
+
+function startLevel(idx){
+  levelIdx = Math.max(0, Math.min(LEVELS.length - 1, idx));
+  xiNames = pickXis(LEVELS[levelIdx].count);
+  tiles = buildTilesFor(xiNames);
+  const plan = planLayout(tiles.length);
+  if (plan.target > tiles.length) addFillerTiles(tiles, plan.target - tiles.length);
+  COLS = plan.cols; ROWS = plan.rows;
+  stopTimer(); timerOn = false;
+  pairsCount = 0; masterCount = 0;
+  XI_LIST.forEach(([name]) => { XI_INDEX[name].done = false; });
+  document.getElementById('st-time').textContent = '00:00';
+  const boardEl = document.getElementById('board');
+  boardEl.style.gridTemplateColumns = 'repeat(' + COLS + ', 1fr)';
+  boardEl.style.minWidth = Math.max(280, COLS * 38) + 'px';
+  const L = LEVELS[levelIdx];
+  document.getElementById('lv-name').textContent = '第 ' + (levelIdx + 1) + ' 关 · ' + L.name;
+  document.getElementById('lv-sub').textContent = L.count + ' 个韵系 · ' + tiles.length + ' 枚韵字 · ' + (tiles.length / 2) + ' 对 · 本关韵系随机抽取';
+  renderBoard();
+  shuffleBoard(true);
+  updateStats();
+  updateTileFont();
+}
+function newGame(){ startLevel(levelIdx); }
+/* ============================================================
+   界面：渲染 / 事件 / 图鉴 / 弹层 / 音效 / 自检 / 初始化
+   ============================================================ */
+
+/* ---- 音效（WebAudio，仅用户手势后发声） ---- */
+let AC = null, muted = false;
+function beep(freq, dur, type, gain, when){
+  if (muted) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + (when || 0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(gain || 0.05, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  } catch (e) {}
+}
+
+/* ---- Toast ---- */
+function toast(html, ms){
+  const box = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast'; el.innerHTML = html;
+  box.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, ms || 2600);
+}
+
+/* ---- 弹层 ---- */
+function openMask(id){ document.getElementById(id).classList.add('open'); }
+function closeMask(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeMask(b.dataset.close)));
+document.querySelectorAll('.mask').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+/* ---- 渲染棋盘 ---- */
+function renderBoard(){
+  const boardEl = document.getElementById('board');
+  const svg = document.getElementById('linkline');
+  boardEl.innerHTML = '';
+  boardEl.appendChild(svg);
+  tileEls = [];
+  tiles.forEach(t => {
+    const el = document.createElement('button');
+    el.className = 'tile';
+    el.dataset.tone = t.tone;
+    el.style.setProperty('--h', t.hue);
+    el.innerHTML = '<span class="ch">' + t.ch + '</span><span class="tone">' + t.tone + '</span>';
+    el.title = t.num + '｜' + t.xi + '系 · ' + t.she + '摄 · ' + t.kh + (t.dup ? '（系内重牌）' : '');
+    el.addEventListener('click', () => onTileClick(t.id));
+    boardEl.appendChild(el);
+    tileEls[t.id] = el;
+  });
+}
+
+/* ---- 韵字字号随卡片大小自适应（不同关卡盘面疏密不同） ---- */
+function updateTileFont(){
+  const boardEl = document.getElementById('board');
+  if (!boardEl || COLS < 1) return;
+  const bw = boardEl.clientWidth || boardEl.offsetWidth || 0;
+  if (!bw) return;
+  const tw = bw / COLS;
+  const fs = Math.round(Math.max(13, Math.min(38, tw * 0.46)));
+  boardEl.style.setProperty('--ch-fs', fs + 'px');
+  boardEl.style.setProperty('--tone-fs', Math.max(7, Math.round(fs * 0.45)) + 'px');
+}
+
+/* ---- 十六摄图例 ---- */
+function renderLegend(){
+  const box = document.getElementById('legend-chips');
+  box.innerHTML = '';
+  SHE_ORDER.forEach(she => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.style.setProperty('--h', SHE_HUE[she]);
+    chip.innerHTML = '<span class="dot"></span>' + she + '摄';
+    chip.addEventListener('click', () => {
+      const n = tiles.filter(t => !t.gone && t.she === she).length;
+      tiles.forEach(t => { if (!t.gone && t.she === she){ tileEls[t.id].classList.add('ring'); setTimeout(() => tileEls[t.id].classList.remove('ring'), 1600); } });
+      toast('高亮「' + she + '摄」' + n + ' 枚韵字');
+    });
+    box.appendChild(chip);
+  });
+}
+
+/* ---- 韵系图鉴 ---- */
+function renderAtlas(){
+  const box = document.getElementById('atlas-body');
+  if (!box) return;
+  box.innerHTML = '';
+  SHE_ORDER.forEach(she => {
+    const group = document.createElement('div');
+    group.className = 'she-group';
+    const head = document.createElement('div');
+    head.className = 'she-head';
+    head.style.setProperty('--h', SHE_HUE[she]);
+    const rows = XI_LIST.filter(([, s]) => s === she);
+    const cnt = rows.reduce((n, [, , m]) => n + m.length, 0);
+    const lvRows = rows.filter(([name]) => xiNames.indexOf(name) >= 0);
+    const doneCnt = lvRows.filter(([name]) => XI_INDEX[name].done).length;
+    head.innerHTML = '<span class="dot"></span>' + she + '摄<span class="cnt">' + rows.length + ' 系 · ' + cnt + ' 韵 · 本关 ' + lvRows.length + ' 系 · 已掌握 ' + doneCnt + '/' + lvRows.length + '</span>';
+    group.appendChild(head);
+    rows.forEach(([name, , members]) => {
+      const inLevel = xiNames.indexOf(name) >= 0;
+      const row = document.createElement('div');
+      row.className = 'xi-row' + (inLevel ? '' : ' off');
+      row.innerHTML = '<span class="name">' + name + '系</span><span class="members">' + members.map(m => m[0]).join(' · ') + '</span>' +
+        (inLevel ? (XI_INDEX[name].done ? '<span class="done">✓ 已掌握</span>' : '') : '<span class="off-tag">本关未选</span>');
+      if (inLevel) row.addEventListener('click', () => {
+        const n = tiles.filter(t => !t.gone && t.xi === name).length;
+        tiles.forEach(t => { if (!t.gone && t.xi === name){ tileEls[t.id].classList.add('ring'); setTimeout(() => tileEls[t.id].classList.remove('ring'), 1600); } });
+        closeMask('mask-atlas');
+        toast('高亮「' + name + '系」' + n + ' 枚韵字');
+      });
+      group.appendChild(row);
+    });
+    box.appendChild(group);
+  });
+}
+
+/* ---- 关卡选择 ---- */
+function renderLevelSelect(){
+  const box = document.getElementById('lv-grid');
+  box.innerHTML = '';
+  LEVELS.forEach((L, i) => {
+    const card = document.createElement('button');
+    card.className = 'lv-card' + (prog.cleared.indexOf(i) >= 0 ? ' done' : '');
+    const best = prog.best[String(i)];
+    card.innerHTML =
+      '<span class="lv-no">第 ' + (i + 1) + ' 关' + (prog.cleared.indexOf(i) >= 0 ? ' · 已通关' : '') + '</span>' +
+      '<span class="lv-name2">' + L.name + '</span>' +
+      '<span class="lv-meta">' + L.count + ' 个韵系 · ' + (L.count === 61 ? '全量 234 牌' : '随机抽取') + '</span>' +
+      '<span class="lv-best">' + (best ? ('最佳 ' + best) : '—') + '</span>';
+    card.addEventListener('click', () => { closeMask('mask-levels'); startLevel(i); toast('已进入第 ' + (i + 1) + ' 关 · ' + L.name); });
+    box.appendChild(card);
+  });
+}
+
+/* ---- 学习板块：四声相承表 / 韵目常识 / 学习资料 ---- */
+const TONE_CLS = { 平: 'p', 上: 's', 去: 'q', 入: 'r' };
+const REF_FILES = [
+  { t: '《汉语音韵学应记诵基础内容总览》', a: '冯蒸 · 《汉字文化》2001年第2期', d: '音韵学二十一项应记诵内容总览，分中古音、上古音、近代音三类与本科、硕士两层次，含《广韵》反切上下字等基础表。', u: 'https://aka.doubaocdn.com/s/xbwGxCogRM',
+    imgs: ['https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/DGANb9h2hoD60jxVGMncvUspnPf', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/J7VBbEdvcoWLvhxF5AqcJiMbnMK', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/TtRmbMvhYotbizxCfWCcQXnanph', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/AbD8bj2faoUGHvxzpVhclJjQn1e', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/DO8fbQ3QwoYrcOxenHDcujudnGy', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/BFrxbc9XGoWgW7x52X3cHuEfn2z', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/IH8SbJgWnoacTcxnD0ecUQELn8f', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/EDlFb8TwZoFvHrxhPsCc1DjOn3Z'] },
+  { t: '《汉语音韵学应记诵基础内容总览（续一）》', a: '冯蒸 · 《汉字文化》2004年第4期', d: '前文勘误；补上古音部分：李方桂谐声说（上古发音部位相同的塞音可以互谐等）。', u: 'https://aka.doubaocdn.com/s/XGiLlukXlz',
+    imgs: ['https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/PYI8bKqCvoZ7ejxo5lPcpvuJnIh', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/TkiMbxipEoISwkxUhEPcewd8nVb', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/Xfk7bcwOhoZZskxFg8gcorfXn5d', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/UKr5bq7TBovGnTxu14CcARO3nVG', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/SwPfbYvo2ojNURx9sWoctCEpnic'] },
+  { t: '《汉语音韵学应记诵基础内容总览（续二）》', a: '冯蒸 · 《汉字文化》2005年第1期', d: '上古谐声表：王力上古音三十韵部谐声表（冬、侵二部分列，共 767 个声首）。', u: 'https://aka.doubaocdn.com/s/nYUGfD7rSU',
+    imgs: ['https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/JG8ib7QBWoTLlIxJBcJcBUOXnEg', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/YM8bbYmu1o38CMxdqWScyMoNnHd', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/Ruc6bwG6Yo2lPcx3rbTcayEQnhh'] },
+  { t: '《汉语音韵学应记诵基础内容总览（续完）》', a: '冯蒸 · 《汉字文化》2005年第3期', d: '汉藏系语言七种民族文字（藏、缅、泰、梵、八思巴、朝鲜、满）字母的通行转写法汇列。', u: 'https://aka.doubaocdn.com/s/PYmHJfLQrY',
+    imgs: ['https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/TyrebweuXo3GkixkO7kcqbr5nvd', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/C2DfbybZ6obyjaxeit7cidPgnNd', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/Rk5YbeMz8oNFFixQ40Xc8c2enJh', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/QBbLbTDksoVUAgxTnOfc1nt6nCd', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/TPUTbuRshoZzFtxIrAdcxbqHnsd'] },
+  { t: '《广韵》韵类和反切下字表', a: '韵书工具表', d: '平、上、去、入四声韵类与反切下字对照，标注开合口、等第与拟音，可与游戏内四声相承表互参。', u: 'https://aka.doubaocdn.com/s/ah5PxpZ1On',
+    imgs: ['https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/Iu0TbnoNuownIgxnJodcBynWnze', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/F6nqbVPBuoPU2SxHYG1cB8kankg', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/IuRMbHmejo7ZJcxzolMc3UdUnZg', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/JQaxbRkdQo4DItxBD71cLS6tnCf', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/H3JpbjVFTocVHJxLCm8c2cD2nJd'] },
+  { t: '《广韵》、平水韵韵目四声相承关系详表', a: '整理本', d: '按中古摄分组，列出《广韵》与平水韵韵目四声相承关系，含序号、反切、开合等第与独用同用注记。', u: 'https://aka.doubaocdn.com/s/hf7WdfIsxo',
+    imgs: ['https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/DIYJbnUrMo3ffxxECvOcZqQCncc', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/PD1ebxoLVoKK2vxKk3jcWwksnGd', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/PIZYbQ8I9oWOO7xgrVXc2RX2nNc', 'https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/DLGGbnIAbok3ulxDCKrcc7RRnDh'] },
+];
+function renderStudy(){
+  const body = document.getElementById('study-body');
+  body.innerHTML = '';
+  const tab = document.querySelector('#mask-study .study-tabs button.on').dataset.tab;
+  if (tab === 'notes'){
+    body.innerHTML =
+      '<div class="learn-note">' +
+      '<h3>《广韵》二百零六韵的构成</h3>' +
+      '<p>平声五十七韵、上声五十五韵、去声六十韵、入声三十四韵，合计二百零六韵。</p>' +
+      '<h3>什么是韵系</h3>' +
+      '<p>同一组平、上、去、入四声相配的韵合称一个韵系，如东系即东（平）· 董（上）· 送（去）· 屋（入）。《广韵》二百零六韵按此系联为六十一韵系。</p>' +
+      '<h3>什么是韵摄</h3>' +
+      '<p>韵尾相同、韵腹相近的韵系归为大类，共十六摄：通、江、止、遇、蟹、臻、山、效、果、假、宕、梗、曾、流、深、咸。</p>' +
+      '<h3>特例注记</h3>' +
+      '<p>冬系无独立上声韵（上声字寄于肿韵）；臻系仅平、入两韵；痕系无入声韵目（入声字寄于没韵）；祭、泰、夬、废四韵只有去声；殷系因避讳亦作「欣系」。' +
+      '开合等第按通行《广韵》音系归类（参《方言调查字表》、王力《汉语音韵学》）。</p>' +
+      '<h3>开合口与等</h3>' +
+      '<p>「开合」指韵母有无 u 介音：开口呼无、合口呼有；「等」分一、二、三、四等，与韵母的元音及介音相应。表中简称为例：东系「合一·合三」即含合口一等与三等两类，支系「开三·合三」即开口三等与合口三等并存，庚系「开二·合二·开三」即开口二等、合口二等与开口三等三类兼有。</p>' +
+      '</div>';
+    return;
+  }
+  if (tab === 'files'){
+    body.innerHTML =
+      '<p class="ref-tip">以下为音韵学记诵参考资料（PDF），点按条目可在线预览并复制下载链接，与游戏内四声相承表、开合等第可互参。</p>' +
+      '<div class="ref-list">' + REF_FILES.map((f, i) =>
+        '<button class="ref-item" data-i="' + i + '">' +
+        '<span class="ref-t">' + f.t + '</span>' +
+        '<span class="ref-a">' + f.a + '</span>' +
+        '<span class="ref-d">' + f.d + '</span>' +
+        '<span class="ref-go">预览 / 下载 ›</span>' +
+        '</button>').join('') + '</div>';
+    body.querySelectorAll('.ref-item').forEach(b => b.addEventListener('click', () => openRef(REF_FILES[+b.dataset.i])));
+    return;
+  }
+  SHE_ORDER.forEach(she => {
+    const wrap = document.createElement('div');
+    wrap.className = 'she-table-wrap';
+    const cap = document.createElement('div');
+    cap.className = 'she-table-cap';
+    cap.style.setProperty('--h', SHE_HUE[she]);
+    cap.innerHTML = '<span class="dot"></span>' + she + '摄';
+    wrap.appendChild(cap);
+    const table = document.createElement('table');
+    table.className = 'she-table';
+    table.innerHTML = '<colgroup><col style="width:15%"><col style="width:15%"><col style="width:17.5%"><col style="width:17.5%"><col style="width:17.5%"><col style="width:17.5%"></colgroup>' +
+      '<thead><tr><th>韵系</th><th>开合等</th><th>平</th><th>上</th><th>去</th><th>入</th></tr></thead>';
+    const tb = document.createElement('tbody');
+    XI_LIST.forEach(([name, s, members]) => {
+      if (s !== she) return;
+      const row = document.createElement('tr');
+      row.innerHTML = '<td class="xi">' + name + '系</td><td class="kh">' + khOf(name) + '</td>';
+      ['平','上','去','入'].forEach(tone => {
+        const m = members.find(x => x[1] === tone);
+        row.innerHTML += m
+          ? '<td class="tn" title="' + m[2] + '"><span class="tone-c tone-' + TONE_CLS[tone] + '">' + m[0] + '</span></td>'
+          : '<td class="miss">—</td>';
+      });
+      tb.appendChild(row);
+    });
+    table.appendChild(tb);
+    wrap.appendChild(table);
+    body.appendChild(wrap);
+  });
+}
+document.querySelectorAll('#mask-study .study-tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#mask-study .study-tabs button').forEach(x => x.classList.toggle('on', x === b));
+  renderStudy();
+}));
+
+/* ---- 资料预览 ---- */
+function openRef(f){
+  document.getElementById('refview-title').textContent = f.t;
+  document.getElementById('refview-link').value = f.u;
+  document.getElementById('refview-body').innerHTML =
+    '<div class="ref-pages">' + f.imgs.map(u =>
+      '<img src="' + u + '" alt="资料页" loading="lazy">').join('') + '</div>';
+  openMask('mask-refview');
+}
+document.getElementById('btn-ref-open').addEventListener('click', () => {
+  window.open(document.getElementById('refview-link').value, '_blank');
+  toast('如未弹出新窗口，请复制上方链接到浏览器打开');
+});
+
+
+/* ---- 控制栏事件 ---- */
+document.getElementById('btn-levels').addEventListener('click', () => { renderLevelSelect(); openMask('mask-levels'); });
+document.getElementById('btn-new').addEventListener('click', newGame);
+document.getElementById('btn-shuffle').addEventListener('click', () => { shuffleBoard(true); toast('已重排盘面'); });
+document.getElementById('btn-atlas').addEventListener('click', () => { renderAtlas(); openMask('mask-atlas'); });
+document.getElementById('btn-study').addEventListener('click', () => { renderStudy(); openMask('mask-study'); });
+document.getElementById('btn-rules').addEventListener('click', () => openMask('mask-rules'));
+document.getElementById('btn-again').addEventListener('click', () => { closeMask('mask-win'); newGame(); });
+document.getElementById('btn-next').addEventListener('click', () => { closeMask('mask-win'); startLevel(levelIdx + 1); });
+document.getElementById('btn-win-atlas').addEventListener('click', () => { closeMask('mask-win'); renderAtlas(); openMask('mask-atlas'); });
+document.getElementById('btn-mute').addEventListener('click', () => {
+  muted = !muted;
+  document.getElementById('ico-sound').innerHTML = muted
+    ? '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/>'
+    : '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/>';
+  toast(muted ? '音效已关闭' : '音效已开启');
+});
+document.getElementById('btn-hint').addEventListener('click', () => {
+  const p = findHintPair();
+  if (!p){ toast('当前没有可消之对，试试重排'); return; }
+  [p[0], p[1]].forEach(id => {
+    tileEls[id].classList.add('hint');
+    setTimeout(() => tileEls[id].classList.remove('hint'), 2000);
+  });
+  const a = tiles[p[0]], b = tiles[p[1]];
+  toast('试试：「' + a.ch + '(' + a.tone + ')」与「' + b.ch + '(' + b.tone + ')」同属' + a.xi + '系');
+});
+document.querySelectorAll('#mode-switch button').forEach(b => b.addEventListener('click', () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('#mode-switch button').forEach(x => x.classList.toggle('on', x === b));
+  if (mode === 'classic' && !hasMove() && tiles.some(t => !t.gone)) shuffleBoard(true);
+  toast(mode === 'classic' ? '经典 · 路径模式：两牌间连线拐弯≤2次' : '自由模式：同系即消，不限路径');
+}));
+
+/* ---- 数据自检（含连通算法用例） ---- */
+function selfTest(){
+  const errs = [];
+  if (XI_LIST.length !== 61) errs.push('韵系数应为61，实得' + XI_LIST.length);
+  const shes = new Set(XI_LIST.map(x => x[1]));
+  if (shes.size !== 16) errs.push('摄数应为16，实得' + shes.size);
+  if (Object.keys(SHE_HUE).length !== 16) errs.push('摄色表应为16项');
+  XI_LIST.forEach(([name, , , kh]) => { if (!kh || kh === '—') errs.push(name + '系缺开合等第'); });
+  const seen = new Set(); let n = 0;
+  XI_LIST.forEach(([, , m]) => m.forEach(([ch, tone]) => {
+    const k = ch + '|' + tone;
+    if (seen.has(k)) errs.push('重复韵目：' + k);
+    seen.add(k); n++;
+  }));
+  if (n !== 206) errs.push('韵目总数应为206，实得' + n);
+  const byShe = {};
+  XI_LIST.forEach(([, s, m]) => { byShe[s] = (byShe[s] || 0) + m.length; });
+  SHE_ORDER.forEach(s => { if (byShe[s] !== SHE_MEMBER_COUNT[s]) errs.push(s + '摄韵目数应为' + SHE_MEMBER_COUNT[s] + '，实得' + byShe[s]); });
+  const testTiles = buildTilesFor(XI_LIST.map(x => x[0]));
+  if (testTiles.length !== TOTAL_TILES) errs.push('全量成牌总数应为234，实得' + testTiles.length);
+  const perXi = {};
+  testTiles.forEach(t => { perXi[t.xi] = (perXi[t.xi] || 0) + 1; });
+  Object.keys(perXi).forEach(xi => { if (perXi[xi] % 2 !== 0) errs.push(xi + '系牌数不成对：' + perXi[xi]); });
+  const tileByShe = {};
+  testTiles.forEach(t => { tileByShe[t.she] = (tileByShe[t.she] || 0) + 1; });
+  SHE_ORDER.forEach(s => { if (tileByShe[s] !== SHE_TILE_COUNT[s]) errs.push(s + '摄成牌数应为' + SHE_TILE_COUNT[s] + '，实得' + tileByShe[s]); });
+
+  /* 关卡校验 */
+  if (LEVELS.length < 2) errs.push('关卡数应≥2');
+  LEVELS.forEach((L, i) => {
+    if (L.count < 2 || L.count > 61) errs.push('第' + (i + 1) + '关韵系数越界：' + L.count);
+    if (i > 0 && L.count <= LEVELS[i - 1].count) errs.push('第' + (i + 1) + '关韵系数未递增');
+  });
+  const lv = buildTilesFor(pickXis(LEVELS[0].count));
+  if (lv.length % 2 !== 0) errs.push('最小关卡牌数不成对：' + lv.length);
+  const lvPer = {};
+  lv.forEach(t => { lvPer[t.xi] = (lvPer[t.xi] || 0) + 1; });
+  Object.keys(lvPer).forEach(xi => { if (lvPer[xi] % 2 !== 0) errs.push('最小关卡 ' + xi + ' 系不成对'); });
+
+  /* 连通算法用例（按全盘 18x13 尺寸） */
+  COLS = 18; ROWS = 13;
+  board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  if (!canConnect({ r: 0, c: 0 }, { r: 0, c: 2 })) errs.push('用例1失败：空路直线应可连');
+  board[1][0] = 1; board[0][1] = 2; board[1][1] = 3; board[2][1] = 4; board[1][2] = 5;   // 围死 (1,1)
+  if (canConnect({ r: 1, c: 1 }, { r: 3, c: 3 })) errs.push('用例2失败：四面被围应不可连');
+  board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  board[0][1] = 999;
+  if (!canConnect({ r: 0, c: 0 }, { r: 0, c: 2 })) errs.push('用例3失败：中间被堵应可绕外沿连通');
+  board[0][1] = null;
+  if (!canConnect({ r: 0, c: 0 }, { r: 2, c: 2 })) errs.push('用例4失败：L形一拐应可连');
+  if (!canConnect({ r: 0, c: 0 }, { r: 0, c: 1 })) errs.push('用例5失败：相邻应可连');
+
+  const el = document.getElementById('selftest');
+  if (errs.length){
+    el.className = 'bad';
+    el.textContent = '数据自检未通过：' + errs.join('；');
+  } else {
+    el.textContent = '数据自检通过：61 韵系 · 206 韵目 · 234 牌 · 11 关卡 · 开合等 61 系 · 连通算法 5/5';
+  }
+}
+
+/* ---- 初始化：先进入主菜单，点「连连看游戏」后再开局 ---- */
+let resizeT = null;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(updateTileFont, 120); });
+renderLegend();
+let gameInited = false;
+document.getElementById('btn-play').addEventListener('click', () => {
+  document.body.classList.remove('in-menu');
+  if (!gameInited){ gameInited = true; startLevel(0); }
+  else updateTileFont();
+});
+document.getElementById('btn-rules-menu').addEventListener('click', () => openMask('mask-rules'));
+document.getElementById('btn-study-menu').addEventListener('click', () => { renderStudy(); openMask('mask-study'); });
+document.getElementById('btn-feedback').addEventListener('click', (e) => {
+  e.preventDefault();
+  const url = 'https://mp.weixin.qq.com/s/ALcb3Sl7jPsviGQMJcG7tA';
+  if (/MicroMessenger/i.test(navigator.userAgent)) { window.location.href = url; return; }
+  openMask('mask-feedback');
+});
+document.getElementById('fb-copy').addEventListener('click', () => {
+  const inp = document.getElementById('fb-link');
+  inp.select();
+  inp.setSelectionRange(0, 9999);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(inp.value).then(() => toast('链接已复制，请在微信或浏览器中粘贴打开')).catch(() => { if (ok) toast('链接已复制，请在微信或浏览器中粘贴打开'); else toast('复制失败，请手动选中链接复制'); });
+  } else {
+    toast(ok ? '链接已复制，请在微信或浏览器中粘贴打开' : '复制失败，请手动选中链接复制');
+  }
+});
+document.getElementById('fb-open').addEventListener('click', () => {
+  window.location.href = 'https://mp.weixin.qq.com/s/ALcb3Sl7jPsviGQMJcG7tA';
+});
+document.getElementById('btn-menu').addEventListener('click', () => document.body.classList.add('in-menu'));
+</script>
+</body>
+</html>
