@@ -756,6 +756,23 @@ function isFree(r, c){ return r < 0 || r >= ROWS || c < 0 || c >= COLS || board[
    直线段只可穿过空格，最多拐弯两次，允许绕行盘面外沿。 */
 function canConnect(a, b){
   if (a.r === b.r && a.c === b.c) return null;
+  /* 直线优先：同行/同列且中间无障碍（含可绕外沿），相邻必为直线 */
+  if (a.r === b.r){
+    const step = Math.sign(b.c - a.c);
+    let ok = true;
+    for (let c = a.c + step; c !== b.c; c += step){
+      if (!isFree(a.r, c)){ ok = false; break; }
+    }
+    if (ok) return [[a.r, a.c], [b.r, b.c]];
+  }
+  if (a.c === b.c){
+    const step = Math.sign(b.r - a.r);
+    let ok = true;
+    for (let r = a.r + step; r !== b.r; r += step){
+      if (!isFree(r, a.c)){ ok = false; break; }
+    }
+    if (ok) return [[a.r, a.c], [b.r, b.c]];
+  }
   const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
   const PERP = [[2,3],[2,3],[0,1],[0,1]];                    // 与第 i 方向垂直的两向
   const walk = (r, c, dr, dc) => {
@@ -937,7 +954,7 @@ function onTileClick(id){
       beep(587, .09, 'sine', .05); beep(880, .12, 'sine', .05, .08);
       sEl.classList.remove('sel');
       doMatch(sel, id);
-      if (mode === 'classic') setTimeout(clearLine, 520);
+      if (mode === 'classic') setTimeout(clearLine, 900);
     } else {
       beep(180, .12, 'square', .04);
       el.classList.add('shake'); sEl.classList.add('shake');
