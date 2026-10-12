@@ -798,9 +798,27 @@ function drawLine(points){
   const br = boardEl.getBoundingClientRect();
   const svg = document.getElementById('linkline');
   const NS = 'http://www.w3.org/2000/svg';
+  const cellW = br.width / COLS, cellH = br.height / ROWS;
+  /* 网格原点校准：以任一现存牌的中心与网格中心的偏差为基准（tile 与 cell 可能略有边距） */
+  let offX = 0, offY = 0;
+  outer:
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+    const id = board[r][c];
+    if (id != null){
+      const er = tileEls[id].getBoundingClientRect();
+      offX = (er.left - br.left + er.width / 2) - (c + 0.5) * cellW;
+      offY = (er.top - br.top + er.height / 2) - (r + 0.5) * cellH;
+      break outer;
+    }
+  }
   const coords = points.map(([r, c]) => {
-    const er = tileEls[board[r][c]].getBoundingClientRect();
-    return [er.left - br.left + er.width / 2, er.top - br.top + er.height / 2];
+    const id = (r >= 0 && r < ROWS && c >= 0 && c < COLS) ? board[r][c] : null;
+    if (id != null){                                  // 端点/牌中心
+      const er = tileEls[id].getBoundingClientRect();
+      return [er.left - br.left + er.width / 2, er.top - br.top + er.height / 2];
+    }
+    /* 拐点（空格）或盘外绕行点：按网格坐标定位 */
+    return [(c + 0.5) * cellW + offX, (r + 0.5) * cellH + offY];
   });
   svg.setAttribute('width', br.width); svg.setAttribute('height', br.height);
   svg.style.width = br.width + 'px'; svg.style.height = br.height + 'px';
